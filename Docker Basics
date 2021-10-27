@@ -62,3 +62,197 @@ Now create container from this image
 # ls# cd tmp
 # ls (you will get all of your files)
 
+     Dockerfile:
+Dockerfile is basically a text file. It contains some set of instructions. Automation of docker image
+creation.
+Dockerfile components:
+
+FROM: for base image, this command must be on the top of the dockerfile.
+RUN: to execute commands, it will create a layer in image
+MAINTAINER: author/ owner/ description
+COPY: copy files from local system (docker vm) we need to provide source, destination (we can’t
+download file from internet and any remote repo.)
+ADD: similar to copy but it provides a feature to download files from internet, also extract file at
+docker image side.
+EXPOSE: to expose ports such as port 8080 for tomcat , port 80 for nginx etc.
+CMD: execute commands but during container creation.
+ENTRYPOINT: similar to CMD but has higher priority over CMD, first commands will be
+executed by ENTRYPOIN only.
+ENV: environment variables
+
+
+Create a file named Dockerfile
+Add instructions in Dockerfile
+Build dockerfile to create image
+Run image to create container
+
+# vi Dockerfile
+FROM ubuntu
+RUN echo “kiriktech” > /tmp/testfile
+
+To create image out of Dockerfile
+# docker build -t myiamge
+
+# docker images
+
+Now create container from the above image
+#docker run -it --name mycont myimage /bin/bash
+#cat /tmp/testfile
+
+ex2: #vi dockerfile
+        FROM ubuntu
+        WORKDIR /tmp
+        RUN echo “thank you” > /tmp/testfile
+        ENV myname kirik
+        COPY testfile1 /tmp
+        ADD test.tar.gz /tmp
+
+
+
+Docker Volume:
+Volume is simply a directory inside our container.
+Finally, we have to declare this directory as a volume and then share volume.
+Even if we stop the container still, we can access volume.
+Volume will be created in one container.
+You can declare a directory as a volume only while creating container.
+You can’t create volume from existing container.
+You can share one volume across any number of containers.
+Volume will not be included when you update an image.
+You can map volume in two ways:
+a. Container to container
+b. Host to container
+
+Benefits of Volume:
+Decoupling container from storage.
+Share volume among different containers.
+Attach volume to containers.
+On deleting container volume doesn’t delete.
+
+Creating Volume from Dockerfile:
+Create a Dockerfile and write
+#vi Dockerfile
+FROM ubuntu
+VOLUME “myvolume”
+
+Then create image from this Dockerfile
+#docker build -t myimage
+
+Now create a container from this image and run
+# docker run -it --name container1 myimage /bin/bash
+
+Now do ls, you can see myvolume.
+Now share volume with another container
+
+Container to container
+# docker run -it --name container2 (new) --privileged=true –volumesfrom container1 ubuntu /bin/bash
+
+Now after creating container2, myvolume is visible. Whatever you do in one volume, can see from other volume.
+# touch /myvolume/samplefile
+
+# docker start container1
+# docker attach container1
+# ls /myvolume
+You can see sample file here then exit.
+
+
+Now create volume by using command:
+#docker run -it --name container3 -v /volume2 ubuntu /bin/bash
+# ls
+#cd /volume2
+Now create one file cont3file and exit
+Now create one more container and share volume2
+
+#docker run -it --name container4 --privileged=true --volumefrom container3 ubuntu /bin/bash
+
+Now you re inside container do ls you can see volume2
+Now create one file inside this volume and then check in container3 you can see that file.
+
+
+Volumes (Host to Container)
+
+Verify files in /home/ec2-user
+# docker run -it --name hostcontainer -v /home/ec2-user:/container --privileged=true ubuntu /bin/bash
+# cd /container
+Do ls, now you can see all files of host machine.
+#touch contanerfile (in container) and exit
+Now check in EC2 machine you can see this above file.
+
+Some other commands:
+#docker volume ls
+#docker volume create <volumename>
+#docker volume rm <volumename>
+#docker volume prune (it removes all unused docker volume)
+#docker volume inspect <volumename>
+#docker container inspect <containername>
+
+
+Docker Port Expose:
+Login into AWS account, create one linux instance.
+Now go to putty -> login as -> ec2-user
+#sudo su
+# yum update -y
+# yum install docker -y# service docker start
+# docker run -td --name techserver -p 80:80 ubuntu
+# docker ps
+# docker port techserver o/p- 80/tcp – 0.0.0.0/80
+# docker exec -it techserver /bin/bash
+# apt-get update
+# apt-get install apache2 -y
+# cd /var/www/html
+# echo “write some msg” > index.html
+#service apache2 start
+# docker run -td --name myjenkins -p 8080:8080 jenkins
+
+Difference between docker attach and docker exec:
+➢ Docker ‘exec’ creates a new process in the container’s environment while docker ‘attach’
+just connect the standard input/output of the main process inside the container to
+corresponding standard input/output error of current terminal.
+
+➢ Docker ‘exec’ is specifically for running new things in an already started container be it a
+shell or some other process.
+
+What is the difference between docker expose and publish:
+Basically you have three options:
+1. Neither specify expose nor -p
+2. Only specify expose
+3. Specify expose and -p
+1. If you specify neither expose nor -p, the service in the container will only be accessible
+from inside the container itself.
+2. If you expose a port, the service in the container is not accessible from outside docker but
+from inside other docker containers so this is good for inter-container communication.
+3. If you expose and -p a port, the service in the container is accessible from anywhere even
+outside docker.If you do –p but do not expose docker does an implicit expose. This is because if a port is open to
+the public, it is automatically also open to the other docker containers. Hence -p includes expose.
+
+How to push docker image in docker hub:
+
+Go to AWS account – select Amazon linux
+Now go to putty – login as – ec2-user
+#sudo su
+#yum update -y
+#yum install docker -y
+#service docker start
+#docker run -it ubuntu /bin/bash
+Now create some files inside container, now create image of this container
+#docker commit container1 image1
+
+Now create account in hub.docker.com
+
+Now go to EC2 instance
+#docker login
+Enter your username and password
+Now give tag to your image
+#docker tag image1 dockerid/newimage
+#docker push dockerid/newimage
+Now you can see this image in docker hub account
+
+Now create one instance in another region and pull image from hub
+#docker pull dockerid/newimage
+To pull private image it will ask password
+Run container from pulled image
+# docker run -it --name mycon dockerid/newimage /bin/bash
+
+Some important commands:
+Stop all running containers: # docker stop $(docker ps -a -q)
+Delete all stopped containers: # docker rm $(docker ps -a -q)
+Delete all images: docker rmi -f $(docker images -q)
