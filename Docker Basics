@@ -24,6 +24,10 @@ To start container
 To go inside container
 # docker attach container_name
 
+To pause container
+# docker pause <container_name>
+# docker unpause <container_name>
+
 To see all comtainers
 # docker ps -a
 or
@@ -42,6 +46,8 @@ To delete a container
 
 To delete a docker image
 # docker rmi image_name
+or
+# docker image remove <image name>
 
 Create container from our own Image:
 
@@ -257,6 +263,35 @@ Run container from pulled image
 # docker run -it --name mycon dockerid/newimage /bin/bash
 
 Some important commands:
+Show layered architecture of image: # docker image history <Reponame:tag> 
+Show details of docker application: # docker image inspect <image_name> 
 Stop all running containers: # docker stop $(docker ps -a -q)
 Delete all stopped containers: # docker rm $(docker ps -a -q)
 Delete all images: docker rmi -f $(docker images -q)
+
+Docker stop vs kill:
+
+#docker stop <container_name>  // docker stop is short form of #docker container stop
+it will shut down the application before stop container
+you can verify this by 
+# docker logs -f <container_name> // -f: follow mode, means it will show continues logs
+
+#docker kill <container_name>
+It will immediatly kill the container without shutting down application
+
+Remove all stopped conatiners
+# docker container prune 
+
+# docker system <COMMAND>
+Commands:
+  df          Show docker disk usage # docker system df
+  events      Get real time events from the server # docker system events //it will show all events like start, kill, stop etc.
+  info        Display system-wide information
+  prune       Remove unused data  # docker system prune // it will delete all stopped containers as well as images that have no single containers
+
+To check memory and cpu utilization of a container:
+# docker stats <container_id>
+
+To limit memory and cpu usage for a container
+# docker run  -td -m 512m --cpu-quota=50000 --name parrot1 <image_id>
+ // -m: memory,  cpu-quota :full=100000 half:50000
