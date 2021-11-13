@@ -26,9 +26,13 @@ To go inside container
 
 To see all comtainers
 # docker ps -a
+or
+# docker container ls -a
 
 To see running containers
 # docker ps
+or
+# docker container ls
 
 To stop container
 # docker stop container_name
@@ -192,7 +196,7 @@ Now go to putty -> login as -> ec2-user
 #sudo su
 # yum update -y
 # yum install docker -y# service docker start
-# docker run -td --name techserver -p 80:80 ubuntu
+# docker run -td --name techserver -p 80:80 ubuntu  // d= detached mode
 # docker ps
 # docker port techserver o/p- 80/tcp – 0.0.0.0/80
 # docker exec -it techserver /bin/bash
