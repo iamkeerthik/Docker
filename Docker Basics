@@ -295,3 +295,43 @@ To check memory and cpu utilization of a container:
 To limit memory and cpu usage for a container
 # docker run  -td -m 512m --cpu-quota=50000 --name parrot1 <image_id>
  // -m: memory,  cpu-quota :full=100000 half:50000
+ 
+----------------------------------------------------------------------------------------------------------------------------------------- 
+ Improve layered caching:
+ 
+FROM python:alpine3.10
+WORKDIR /app 
+COPY . /app
+RUN pip install -r requirements.txt
+EXPOSE 5000
+ENTRYPOINT ["python", "./launch.py"]
+
+Here we are copying all files in layer one (lauch + requirements) because of this we cant use caching for requirements in subsequent build
+if any code change happend in main file (launch.py)
+
+ V/S
+ 
+FROM python:alpine3.10
+WORKDIR /app 
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r requirements.txt
+EXPOSE 5000
+COPY . /app
+ENTRYPOINT ["python", "./launch.py"]
+ 
+In second one we will copy and install requirements in first layer then run application in next layer 
+So in subsequent build it will use caching for requiremts installation even if any code changes happened in file (ex: changes in lauch.py)
+-------------------------------------------------------------------------------------------------------------------------------------------------- 
+ CMD vs ENTRYPOINT
+ 
+ CMD python ./launch.py
+ #in CMD command line argument can override fixed argument
+ EX:docker run -dp 5000:5000 --name=pyhello python-hello ping google.com 
+ In this case ping google.com overrides ./launch.py
+ 
+ ENTRYPOINT ["python", "./launch.py"]
+ #it will run fixed argument and not allow commandline argument to override fixed argument
+ EX:docker run -dp 5000:5000 --name=pyhello python-hello ping google.com 
+ it wont allow ping google.com to override ./launch.py
+ 
+ 
