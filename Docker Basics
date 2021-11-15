@@ -335,3 +335,90 @@ So in subsequent build it will use caching for requiremts installation even if a
  it wont allow ping google.com to override ./launch.py
  
  
+ Linking two microservices in bridge network (temproary)
+ 
+ docker run -dp 8000:8000 --name=currency-exchange in28min/mmv2-currency-exchange-service:0.0.12-SNAPSHOT
+ docker run -dp 8100:8100 --name=currency-conversion --env CURRENCY_EXCHANGE_SERVICE_HOST=http://currency-exchange --link currency-exchange in28min/mmv2-currency-conversion-service:0.0.1-SNAPSHOT
+
+ Creating custom network
+# Docker network 
+o/p:
+Usage:  docker network COMMAND
+
+Manage networks
+
+Commands:
+  connect     Connect a container to a network
+  create      Create a network
+  disconnect  Disconnect a container from a network
+  inspect     Display detailed information on one or more networks
+  ls          List networks
+  prune       Remove all unused networks
+  rm          Remove one or more networks
+
+# docker network create custom-net
+# docker run -dp 8000:8000 --name=currency-exchange --network=custom-net in28min/mmv2-currency-exchange-service:0.0.1-SNAPSHOT
+# docker run -dp 8100:8100 --name=currency-conversion --env CURRENCY_EXCHANGE_SERVICE_HOST=http://currency-exchange --network=custom-net in28min/mmv2-currency-conversion-service:0.0.1-SNAPSHOT
+
+Docker compose
+-> sudo apt install docker-compose
+
+Create docker compose file
+ -> vi docker-compose.yml
+          version: '3.7'
+          services:
+            currency-exchange:
+              image: in28min/currency-exchange:0.0.1-RELEASE
+              ports:
+                - "8000:8000"
+              restart: always
+              networks:
+                - currency-compose-network
+
+            currency-conversion:
+              image: in28min/currency-conversion:0.0.1-RELEASE
+              ports:
+                - "8100:8100"
+              restart: always
+              environment:
+                CURRENCY_EXCHANGE_SERVICE_HOST: http://currency-exchange
+              depends_on:
+                - currency-exchange
+              networks:
+                - currency-compose-network
+
+          # Networks to be created to facilitate communication between containers
+          networks:
+            currency-compose-network:
+            
+    # save the file and run
+    -> docker-compose up 
+     It will create network as well as microservice and run it
+     or 
+    -> docker-compose up -d //it will run in dettached mode
+    
+     To verify visit:
+     http://localhost:8000/currency-exchange/from/USD/to/INR
+     http://localhost:8100/currency-conversion/from/EUR/to/INR/quantity/10
+     
+     -> docker-compose event
+     //it will show all events happening while creating container
+     
+     -> docker-compose down
+      //It will remove container as well as network created by docker compose file
+      
+      -> docker-compose -config 
+      //It will validate docker-compose.yml file syntax
+      
+      -> docker-compose images //show images pulled/used by docker-compose file
+      -> docker-compose ps //show running containers
+      
+      -> docker-compose top
+      //It will show top process/services running in a each container
+      
+      -> docker-compose pause
+      -> docker-compose unpause
+      -> docker-compose stop 
+      -> docker-compose kill
+      
+      
